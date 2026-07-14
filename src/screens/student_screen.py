@@ -151,7 +151,7 @@ def student_screen():
             audio_data = None
 
             try:
-                audio_data = st.audio_input('Record a short phrase like I am present, My name is Akash.')
+                audio_data = st.audio_input('Record a short phrase like I am present, My name is Ranga A.')
             except Exception:
                 st.error('Audio Data failed!')
 
