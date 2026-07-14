@@ -235,53 +235,68 @@ def teacher_tab_manage_subjects():
         st.info("NO SUBJECTS FOUND. CREATE ONE ABOVE")
 
 
-def teacher_tab_attendance_records():
-    st.header('Attendance Records')
+@st.dialog("Attendance Details")
+def attendance_details_dialog(records):
+    details = []
 
-    teacher_id = st.session_state.teacher_data['teacher_id']
+    for r in records:
+        details.append({
+            "Student": r["students"]["name"],
+            "Status": "✅ Present" if r["is_present"] else "❌ Absent"
+        })
+
+    st.dataframe(pd.DataFrame(details), hide_index=True, width="stretch")
+
+def teacher_tab_attendance_records():
+    st.header("Attendance Records")
+
+    teacher_id = st.session_state.teacher_data["teacher_id"]
 
     records = get_attendance_for_teacher(teacher_id)
 
     if not records:
+        st.info("No attendance records found.")
         return
-    
-    data = []
+
+    sessions = {}
 
     for r in records:
-        ts = r.get('timestamp')
+        ts = r.get("timestamp")
 
-        data.append({
-            "ts_group": ts.split(".")[0] if ts else None,
-            "Time": datetime.fromisoformat(ts).strftime("%Y-%m-%d %I:%M %p") if ts else "N'A",
-            "Subject": r['subjects']['name'],
-            "Subject Code":r['subjects']['subject_code'],
-            "is_present": bool(r.get('is_present', False))
-        })
+        key = (
+            ts.split(".")[0] if ts else "",
+            r["subjects"]["name"],
+            r["subjects"]["subject_code"],
+        )
 
+        sessions.setdefault(key, []).append(r)
 
-    df = pd.DataFrame(data)
+    for (ts, subject, code), session_records in sorted(
+        sessions.items(), reverse=True
+    ):
 
+        present = sum(1 for x in session_records if x["is_present"])
+        total = len(session_records)
 
+        c1, c2, c3, c4, c5 = st.columns([2, 2, 2, 2, 1])
 
-    summary = (
-        df.groupby(['ts_group', 'Time', 'Subject', 'Subject Code'])
-        .agg(
-            Present_Count = ('is_present', 'sum'),
-            Total_Count =('is_present', 'count')
-        ).reset_index()
+        with c1:
+            st.write(datetime.fromisoformat(ts).strftime("%Y-%m-%d %I:%M %p"))
 
-    )
+        with c2:
+            st.write(subject)
 
-    summary['Attendance Stats'] = (
-        "✅ " + summary['Present_Count'].astype(str) + " /"
-        + summary['Total_Count'].astype(str) + ' Students'
-    )
+        with c3:
+            st.write(code)
 
-    display_df = ( summary.sort_values(by='ts_group' ,ascending=False)
-                  [['Time', 'Subject', 'Subject Code', 'Attendance Stats']]
-                  )
-    
-    st.dataframe(display_df, width='stretch', hide_index=True)
+        with c4:
+            st.write(f"✅ {present}/{total}")
+
+        with c5:
+            if st.button("View", key=f"{ts}_{code}"):
+                attendance_details_dialog(session_records)
+
+        st.divider()
 
 
 def login_teacher(username, password):
