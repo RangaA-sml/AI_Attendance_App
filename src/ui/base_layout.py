@@ -101,10 +101,10 @@ def style_base_layout():
 
             button[kind="tertiary"]{
                 border-radius: 1.5rem !important;
-                background-color: black !important;
-                color: white !important;
+                background-color: white !important;
+                color: #5865F2 !important;
                 padding: 10px 20px !important;
-                border: none !important;
+                border: 2px solid #5865F2 !important;
                 transition: transform 0.25s ease-in-out !important;
                 }
 

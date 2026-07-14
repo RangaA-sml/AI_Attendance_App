@@ -348,9 +348,11 @@ def register_teacher(teacher_username, teacher_name, teacher_pass, teacher_pass_
     
     try:
         create_teacher(teacher_username, teacher_pass, teacher_name)
-        return True, "Sucessfully Created! Login Now"
+        return True, "Successfully Created! Login Now"
     except Exception as e:
-        return False, "Unexpected Error!"
+        st.error(str(e))
+        print(e)
+        return False, str(e)
     
 
 def teacher_screen_register():
